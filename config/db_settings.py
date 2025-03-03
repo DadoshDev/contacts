@@ -1,12 +1,7 @@
 from typing import Union
 import psycopg2
 from psycopg2.extras import DictCursor, DictRow
-
-from config.landing import landing_simulation
 from config.Config import DB_CONFIG
-
-
-# landing_simulation()
 
 
 class DatabaseManager:
