@@ -1,6 +1,8 @@
 import hashlib
 import smtplib
 import random
+import os
+from dotenv import load_dotenv
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -10,25 +12,28 @@ from utils.queries import (update_is_login, add_user, check_password_format,
 import threading
 
 
+load_dotenv()
+
+SMTP_SERVER = os.getenv("SMTP_SERVER")
+SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
+SMTP_USERNAME = os.getenv("SMTP_USERNAME")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+FROM_EMAIL = os.getenv("FROM_EMAIL")
+
+
 def send_email(email, subject, message):
-    smtp_server = 'smtp.gmail.com'
-    smtp_port = 587
-    smtp_username = 'ilyosovdadahon62@gmail.com'
-
-    smtp_password = 'gwql ptul znzf sfjx'
-    from_email = 'ilyosovdadahon62@gmail.com'
-
+    """Send email."""
     try:
-        server = smtplib.SMTP(smtp_server, smtp_port)
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
         server.starttls()
-        server.login(smtp_username, smtp_password)
+        server.login(SMTP_USERNAME, SMTP_PASSWORD)
         msg = MIMEMultipart()
 
-        msg['From'] = from_email
+        msg['From'] = FROM_EMAIL
         msg['To'] = email
         msg['Subject'] = subject
         msg.attach(MIMEText(message, 'plain'))
-        server.sendmail(from_email, email, msg.as_string())
+        server.sendmail(FROM_EMAIL, email, msg.as_string())
 
         return True
     except Exception as e:

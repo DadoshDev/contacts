@@ -1,0 +1,36 @@
+# Python bo‘sh fayllari
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual muhit
+.venv/
+venv/
+env/
+
+# Django migration va SQLite ma’lumotlar bazasi
+db.sqlite3
+*.sqlite3
+*/migrations/*
+
+# IDE va tahrirlagichlar fayllari
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Media va statik fayllar
+/static/
+media/
+
+# Loglar va kesh fayllari
+*.log
+*.cache/
+*.pid
+
+# Secrets va mahfiy fayllar
+.env
+config/settings_local.py
+
+.idea
+venv
