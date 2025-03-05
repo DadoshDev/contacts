@@ -4,7 +4,7 @@ auth_menu = """
 3. Exit
 """
 
-admin = """
+admin_menu = """
 1. View all users
 2. View all contacts
 3. Get all active users

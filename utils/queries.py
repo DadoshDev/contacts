@@ -1,5 +1,6 @@
 import hashlib
 
+from auth.auth import send_email
 from config.db_settings import execute_query
 from utils.email_query import get_user_by_email
 
@@ -88,16 +89,6 @@ def logout_query():
         """
         execute_query(query=query, params=(0, 1,))
         return True
-    except Exception as e:
-        print(e)
-        return False
-
-
-def get_active_user():
-    try:
-        query = """
-            SELECT * FROM users Where is_login = %s"""
-        return execute_query(query=query, params=(1,), fetch="one")
     except Exception as e:
         print(e)
         return False
@@ -255,7 +246,7 @@ def get_contact(user_id: int, contact_id: int) -> bool:
 
 
 def get_all_contacts(user_id) -> bool:
-    """Get all contacts from the database."""
+    """ Get user's contacts from database."""
     try:
         query = "SELECT * FROM contacts WHERE user_id = %s AND status = %s"
         status = True
@@ -264,7 +255,7 @@ def get_all_contacts(user_id) -> bool:
         if contacts:
             print("\nContacts:\n")
             for contact in contacts:
-                print(f"Id: {contact[0]},\n"
+                print(f"\nId: {contact[0]},\n"
                       f"Name: {contact[2]},\n"
                       f"Email: {contact[3]},\n"
                       f"Phone: {contact[4]}.\n")
@@ -352,27 +343,6 @@ def edit_contact(user_id):
         return False
 
 
-# def contact_search(user_id):
-#     """Search for a contact by name, email or phon number."""
-#     try:
-#         search_query = input("Enter name, phone number or email: ")
-#         query = ("SELECT * FROM contacts WHERE user_id = %s AND status = %s AND "
-#                  "( full_name LIKE %s AND email LIKE %s AND phone_number LIKE %s)")
-#         status = True
-#         params = (user_id, status, search_query, f'%{search_query}%', f'%{search_query}%', f'%{search_query}%')
-#         contacts = execute_query(query=query, params=params, fetch='all')
-#         print("Search Results:")
-#         for contact in contacts:
-#             print(f"\nID: {contact[0]},\n"
-#                   f"Name: {contact[2]},\n"
-#                   f"Email: {contact[3]},\n"
-#                   f"Phone: {contact[4]}.\n")
-#         return True
-#
-#     except Exception as e:
-#         print(f"Failed to search contacts. Error: {e}")
-#         return False
-
 def log_out(user_id):
     try:
         query = """
@@ -382,4 +352,127 @@ def log_out(user_id):
         return True
     except Exception as e:
         print(e)
+        return False
+
+
+def view_all_users():
+    """View all users."""
+    try:
+        query = "SELECT * FROM users"
+        users = execute_query(query=query, fetch="all")
+        if users:
+            print("\nUsers:\n")
+            for user in users:
+                print(f"\nUser ID: {user[0]},\n"
+                      f"Username: {user[1]},\n"
+                      f"Password: {user[3]},\n"
+                      f"Email: {user[2]},\n"
+                      f"Status: {user[5]}\n")
+            return True
+        else:
+            print("No users found.")
+            return False
+
+    except Exception as e:
+        print(f"Failed to get all users. Error: {e}")
+        return False
+
+
+def view_all_contacts() -> bool:
+    """ Get user's contacts from database."""
+    try:
+        query = "SELECT * FROM contacts"
+        status = True
+        params = (status,)
+        contacts = execute_query(query=query, params=params, fetch="all")
+        if contacts:
+            print("\nContacts:\n")
+            for contact in contacts:
+                print(f"\nId: {contact[0]},\n"
+                      f"Name: {contact[2]},\n"
+                      f"Email: {contact[3]},\n"
+                      f"Phone: {contact[4]}.\n"
+                      f"Status: {contact[5]}\n")
+            return True
+        else:
+            print("No contacts found.")
+            return False
+
+    except Exception as e:
+        print(f"Failed to get all contacts. Error: {e}")
+        return False
+
+
+def get_active_users():
+    """ Get active users."""
+    try:
+        query = """
+            SELECT * FROM users Where is_login = %s"""
+        users = execute_query(query=query, params=(1,), fetch="all")
+        if users:
+            print("\nUsers:\n")
+            for user in users:
+                print(f"\nUser ID: {user[0]},\n"
+                      f"Username: {user[1]},\n"
+                      f"Password: {user[3]},\n"
+                      f"Email: {user[2]},\n"
+                      f"Status: {user[5]}\n")
+            return True
+        else:
+            print("No users found.")
+            return False
+    except Exception as e:
+        print(e)
+        return False
+
+
+def send_massage_admin():
+    """ """
+    choice = input("Do you want to send the message to everyone (y/n)? ")
+    if choice.lower() == 'y':
+        subject = input("Enter subject: ")
+        massage = input("Enter massage: ")
+        return send_massage_all(subject, massage)
+    elif choice.lower() == 'n':
+        email = input("Enter user's email: ")
+        subject = input("Enter subject: ")
+        massage = input("Enter massage: ")
+        return send_massage_one(email, subject, massage)
+    else:
+        print("Invalid option. Please try again.")
+        return False
+
+
+def send_massage_all(subject: str, massage: str) -> bool:
+    try:
+        query = """ SELECT email FROM users"""
+        emails = execute_query(query=query, fetch="all")
+        if emails:
+            for user in emails:
+                send_email(user[0], subject, massage)
+            print("Massage sent successfully to all users!")
+            return True
+        else:
+            print("No users found.")
+            return False
+
+    except Exception as e:
+        print(f"Failed to send massage to all users. Error: {e}")
+        return False
+
+
+def send_massage_one(email, subject, massage):
+    try:
+        query = """SELECT EXISTS(SELECT 1 FROM users WHERE email = %s)"""
+        res = execute_query(query=query, params=(email,), fetch="one")
+        if res:
+            send_email(email, subject, massage)
+            print(f"Massage sent successfully to {email}!")
+            return True
+        else:
+            print("User not found.")
+            return False
+
+    except Exception as e:
+        print(f"Failed to send massage to user. Error: {e}")
         return False

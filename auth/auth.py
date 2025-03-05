@@ -1,46 +1,10 @@
 import hashlib
-import smtplib
 import random
-import os
-from dotenv import load_dotenv
 from datetime import datetime
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from utils.email_query import check_email_format, get_user_by_email, get_user_code
+from utils.email_query import check_email_format, get_user_by_email, get_user_code, send_email
 from utils.queries import (update_is_login, add_user, check_password_format,
                            add_code_query, update_user_status)
 import threading
-
-
-load_dotenv()
-
-SMTP_SERVER = os.getenv("SMTP_SERVER")
-SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
-SMTP_USERNAME = os.getenv("SMTP_USERNAME")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-FROM_EMAIL = os.getenv("FROM_EMAIL")
-
-
-def send_email(email, subject, message):
-    """Send email."""
-    try:
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(SMTP_USERNAME, SMTP_PASSWORD)
-        msg = MIMEMultipart()
-
-        msg['From'] = FROM_EMAIL
-        msg['To'] = email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(message, 'plain'))
-        server.sendmail(FROM_EMAIL, email, msg.as_string())
-
-        return True
-    except Exception as e:
-        print(f"Failed to send Password to: {email}. Error: {e}")
-        return False
-    finally:
-        server.quit()
 
 
 def generate_verify_code(email: str):
@@ -111,16 +75,17 @@ def register():
     return verify_code(email)
 
 
-def login():
+def login(email, password):
+    try:
+        user = get_user_by_email(email=email)
+        hashed_password = hashlib.sha256(password.encode()).hexdigest()
+        if user[3] == hashed_password and user[-1] == 1:
+            update_is_login(user_id=user[0], status=1)
+            return user[0]
+        else:
+            print("Invalid email or password!")
+            return False
 
-    email = input("Enter your email address: ")
-    password = input("Enter your password: ")
-
-    user = get_user_by_email(email=email)
-    hashed_password = hashlib.sha256(password.encode()).hexdigest()
-    if user[3] == hashed_password and user[-1] == 1:
-        update_is_login(user_id=user[0], status=1)
-        return user[0]
-    else:
-        print("Invalid email or password!")
+    except Exception as e:
+        print(f"Failed to login. Error: {e}")
         return False
