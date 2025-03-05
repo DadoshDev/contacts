@@ -33,4 +33,3 @@ media/
 config/settings_local.py
 
 .idea
-venv
